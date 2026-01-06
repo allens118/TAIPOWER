@@ -1,0 +1,5 @@
+requests==2.32.3
+beautifulsoup4==4.12.3
+pillow==10.4.0
+pytesseract==0.3.10
+paho-mqtt==2.1.0
