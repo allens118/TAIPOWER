@@ -547,7 +547,10 @@ def publish_mqtt(message: str) -> None:
         client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
 
     client.connect(MQTT_HOST, MQTT_PORT, 60)
-    client.publish(MQTT_TOPIC, message, retain=True)
+    client.loop_start()
+    info = client.publish(MQTT_TOPIC, message, retain=True)
+    info.wait_for_publish()
+    client.loop_stop()
     client.disconnect()
 
 
