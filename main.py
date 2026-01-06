@@ -259,20 +259,24 @@ def login_and_get_dashboard(session: requests.Session) -> str:
 
     for attempt in range(1, MAX_LOGIN_ATTEMPTS + 1):
         login_ok = False
+        print(f"Attempt {attempt}: loading login page...")
         html = get_login_page(session)
         if SAVE_LOGIN_HTML:
             with open(f"login_page_{attempt}.html", "w", encoding="utf-8") as fh:
                 fh.write(html)
         action_url, fields, captcha_url = parse_login_form(html)
         token = extract_token(html)
+        print(f"Attempt {attempt}: fetching captcha...")
         captcha_img = fetch_captcha(session, captcha_url)
 
         if USE_2CAPTCHA:
             try:
+                print(f"Attempt {attempt}: solving captcha via 2captcha...")
                 captcha_code = solve_captcha_2captcha(captcha_img)
             except Exception:
                 captcha_code = ocr_captcha(captcha_img)
         else:
+            print(f"Attempt {attempt}: solving captcha via OCR...")
             captcha_code = ocr_captcha(captcha_img)
 
             if CAPTCHA_MANUAL:
@@ -285,6 +289,8 @@ def login_and_get_dashboard(session: requests.Session) -> str:
                 except EOFError:
                     continue
             else:
+                if len(captcha_code) != 4:
+                    print(f"Attempt {attempt}: OCR failed, retrying...")
                 continue
 
         payload = dict(fields)
@@ -345,6 +351,7 @@ def login_and_get_dashboard(session: requests.Session) -> str:
                 print(f"Attempt {attempt}: {exc}")
                 time.sleep(1)
                 continue
+        print(f"Attempt {attempt}: fetching dashboard...")
         dash = session.get(DASHBOARD_URL, timeout=20)
         if DASHBOARD_DEBUG:
             with open(f"dashboard_{attempt}.html", "w", encoding="utf-8") as fh:
